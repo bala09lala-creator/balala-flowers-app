@@ -10,6 +10,7 @@ import {
   PhotoChannel,
 } from '../data/orders';
 import { SHOP } from '../config/shop';
+import { findSettlement } from '../data/settlements';
 import { deliveryCost, formatDeliveryCost } from '../utils/delivery';
 import { formatPrice } from '../utils/format';
 import { escapeHtml } from './telegram';
@@ -62,7 +63,10 @@ export function validateOrder(
   const address: Address | null =
     deliveryMethod !== 'pickup'
       ? {
-          settlement: deliveryMethod === 'outside' ? str(input.address?.settlement, 100) : undefined,
+          settlement:
+            deliveryMethod === 'outside'
+              ? (findSettlement(str(input.address?.settlement, 100))?.name ?? str(input.address?.settlement, 100))
+              : undefined,
           street: str(input.address?.street, 150),
           house: str(input.address?.house, 20),
           entrance: str(input.address?.entrance, 10),
@@ -79,7 +83,7 @@ export function validateOrder(
   if (!oneOf(PAYMENT_LABELS, input.payment)) return { error: 'Выберите способ оплаты' };
 
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
-  const delivery = deliveryCost(deliveryMethod, subtotal);
+  const delivery = deliveryCost(deliveryMethod, subtotal, address?.settlement);
 
   return {
     order: {

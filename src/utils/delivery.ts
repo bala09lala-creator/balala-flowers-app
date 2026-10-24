@@ -1,10 +1,12 @@
 import { SHOP } from '../config/shop';
 import type { DeliveryMethod } from '../data/orders';
+import { findSettlement } from '../data/settlements';
 
-// Стоимость доставки. null — стоимость уточнит менеджер (доставка за пределы города).
-export function deliveryCost(method: DeliveryMethod, subtotal: number): number | null {
+// Стоимость доставки. null — стоимость уточнит менеджер
+// (населённого пункта нет в списке или для него не указана цена).
+export function deliveryCost(method: DeliveryMethod, subtotal: number, settlement = ''): number | null {
   if (method === 'pickup') return 0;
-  if (method === 'outside') return SHOP.outsideDeliveryPrice;
+  if (method === 'outside') return findSettlement(settlement)?.price ?? null;
   return subtotal >= SHOP.freeDeliveryFrom ? 0 : SHOP.deliveryPrice;
 }
 

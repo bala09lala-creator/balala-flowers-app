@@ -18,6 +18,7 @@ import {
 
 import { createOrder, getPaymentStatus } from '../api/client';
 import { Button } from '../components/Button';
+import { SettlementPicker } from '../components/SettlementPicker';
 import { ShopLocation } from '../components/ShopLocation';
 import { Overline } from '../components/Typography';
 import { SHOP } from '../config/shop';
@@ -131,7 +132,7 @@ export default function CheckoutScreen() {
 
   const isDelivery = deliveryMethod !== 'pickup';
   const isOutside = deliveryMethod === 'outside';
-  const delivery = deliveryCost(deliveryMethod, total);
+  const delivery = deliveryCost(deliveryMethod, total, settlement);
 
   async function onSubmit() {
     const missing = [
@@ -239,9 +240,10 @@ export default function CheckoutScreen() {
               {isOutside ? (
                 <>
                   <Text style={styles.note}>
-                    Доставка за пределы Черкесска платная, стоимость уточнит менеджер после оформления заказа.
+                    Доставка за пределы Черкесска платная, бесплатная доставка от{' '}
+                    {formatPrice(SHOP.freeDeliveryFrom)} на неё не распространяется.
                   </Text>
-                  <Field label="Населённый пункт" value={settlement} onChangeText={setSettlement} />
+                  <SettlementPicker value={settlement} onChange={setSettlement} />
                 </>
               ) : (
                 <>

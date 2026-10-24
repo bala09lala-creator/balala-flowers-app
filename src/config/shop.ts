@@ -18,8 +18,7 @@ export const SHOP = {
   // Доставка по Черкесску: платная, бесплатно от суммы заказа freeDeliveryFrom.
   deliveryPrice: 250,
   freeDeliveryFrom: 7000,
-  // За пределы Черкесска доставка всегда платная. null — стоимость уточняет менеджер.
-  outsideDeliveryPrice: null as number | null,
+  // За пределы Черкесска доставка всегда платная — цены в src/data/settlements.ts.
   legal: 'ИП Тамбиев Н.И., ИНН 091693479183, ОГРНИП 324090000019859',
   website: 'https://balala-flowers.ru',
 };
