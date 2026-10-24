@@ -138,7 +138,7 @@ export function orderMessage(order: ValidOrder): string {
   if (order.recipient) {
     rows.push(`🎁 Получатель: ${e(order.recipient.name)}${order.recipient.phone ? `, ${e(order.recipient.phone)}` : ''}`);
   }
-  rows.push(order.address ? `📍 ${e(formatAddress(order.address))}` : '🏪 Самовывоз из магазина');
+  rows.push(order.address ? `📍 ${e(formatAddress(order.address))}` : `🏪 Самовывоз: ${SHOP.address}`);
   rows.push(`🗓 ${formatDate(order.date)}, ${e(order.timeSlot)}`);
   if (order.cardText) rows.push(`💌 Записка: «${e(order.cardText)}»`);
   if (order.photo !== 'none') rows.push(`📸 Фото букета перед отправкой: ${PHOTO_LABELS[order.photo]}`);

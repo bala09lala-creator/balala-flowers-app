@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { ComponentProps } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { ShopLocation } from '../../components/ShopLocation';
 import { Body, Heading, Ornament, Overline } from '../../components/Typography';
 import { SHOP } from '../../config/shop';
 import { colors, fonts } from '../../theme';
@@ -51,7 +52,7 @@ export default function ContactsScreen() {
       </View>
 
       <View style={styles.card}>
-        <Row icon="location-outline" title="Адрес" value={SHOP.address} />
+        <ShopLocation />
         <Row icon="time-outline" title="Время работы" value={`${SHOP.hours}\n${SHOP.holidayHours}`} />
       </View>
 

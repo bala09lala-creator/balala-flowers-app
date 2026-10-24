@@ -87,7 +87,7 @@ export default function CatalogScreen() {
         <View style={styles.heroOverlay}>
           <View style={styles.heroLine} />
           <Text style={styles.heroTitle}>BALALA</Text>
-          <Text style={styles.heroSubtitle}>ЦВЕТОЧНЫЙ МАГАЗИН</Text>
+          <Text style={styles.heroSubtitle}>{SHOP.tagline.toUpperCase()}</Text>
           <View style={{ gap: 8, marginTop: 18 }}>
             {['Свежие цветы каждый день', 'Доставка по Черкесску', 'Букет за 2 часа'].map((t) => (
               <View key={t} style={styles.bullet}>

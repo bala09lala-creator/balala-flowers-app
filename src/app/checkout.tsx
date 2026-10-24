@@ -18,6 +18,7 @@ import {
 
 import { createOrder, getPaymentStatus } from '../api/client';
 import { Button } from '../components/Button';
+import { ShopLocation } from '../components/ShopLocation';
 import { Overline } from '../components/Typography';
 import { SHOP } from '../config/shop';
 import { useCart } from '../context/CartContext';
@@ -237,9 +238,7 @@ export default function CheckoutScreen() {
               </View>
             </>
           ) : (
-            <Text style={styles.hint}>
-              Заберите заказ в магазине: {SHOP.address}. Оплатить можно при получении.
-            </Text>
+            <ShopLocation />
           )}
           <Overline>{isDelivery ? 'Дата доставки' : 'Дата'}</Overline>
           <Chips options={days} value={date} onChange={setDate} />

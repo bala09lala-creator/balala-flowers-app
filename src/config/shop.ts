@@ -2,14 +2,16 @@
 export const SHOP = {
   name: 'Balala',
   slogan: 'Доставка цветов в Черкесске',
+  tagline: 'Цвети, душа моя',
   city: 'Черкесск',
   phone: '+7 905 423-32-30',
   whatsapp: '79054233230',
   telegram: 'balala_flowers_cherk',
   instagram: 'balala_flowers_cherk',
   vk: 'balala_flowers',
-  // TODO: уточнить адрес магазина для самовывоза
-  address: 'г. Черкесск',
+  address: 'г. Черкесск, ул. Горького, 2',
+  addressHint: 'Напротив гимназии № 9, не заезжая во двор дома. В навигаторе ищите «Balala».',
+  mapsUrl: `https://yandex.ru/maps/?text=${encodeURIComponent('Balala, Черкесск, улица Горького, 2')}`,
   hours: 'Ежедневно 9:00 — 21:00',
   holidayHours: 'В праздники до 23:00: 14 февраля, 8 марта, 24 ноября',
   deliveryPrice: 200,
