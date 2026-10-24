@@ -90,11 +90,20 @@ Tilda (каталог) ──► сервер (src/app/api, EAS Hosting) ──�
 
 ### 4. Публикация сервера
 
+Каждую переменную из `.env.example` добавьте в окружение production (видимость `sensitive`:
+значение скрыто в логах; тип `secret` в EAS Hosting не работает):
+
 ```bash
-npx eas-cli@latest env:create   # добавить переменные из .env.example в окружение production
+npx eas-cli@latest env:set --name TELEGRAM_BOT_TOKEN --value '<токен>' --environment production --visibility sensitive
+npx eas-cli@latest env:set --name TELEGRAM_CHAT_ID --value '<id через запятую>' --environment production --visibility sensitive
+# …и так же YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY и остальные
+
 npx expo export --platform web
-npx eas-cli@latest deploy --prod
+npx eas-cli@latest deploy --prod --environment production
 ```
+
+То же можно сделать на [expo.dev](https://expo.dev): проект → Project settings → Environment variables →
+Add Variables. После любого изменения переменных сервер нужно опубликовать заново (две последние команды).
 
 Полученный адрес (например, `https://balala-flowers.expo.app`) укажите в `EXPO_PUBLIC_API_URL`
 перед сборкой приложения и в настройках уведомлений ЮKassa.
