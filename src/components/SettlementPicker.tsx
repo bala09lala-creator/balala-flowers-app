@@ -8,21 +8,18 @@ import { Overline } from './Typography';
 
 type Props = { value: string; onChange: (name: string) => void };
 
-const priceLabel = (price: number | null) => (price === null ? 'уточнит менеджер' : formatPrice(price));
-
 // Поиск населённого пункта из списка с ценами доставки.
 export function SettlementPicker({ value, onChange }: Props) {
   const [query, setQuery] = useState('');
 
   if (value) {
-    const known = findSettlement(value);
     return (
       <View style={{ gap: 6 }}>
         <Overline>Населённый пункт</Overline>
         <View style={styles.selected}>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{value}</Text>
-            <Text style={styles.price}>Доставка: {priceLabel(known?.price ?? null)}</Text>
+            <Text style={styles.price}>Доставка: {formatPrice(findSettlement(value)?.price ?? 0)}</Text>
           </View>
           <Pressable
             onPress={() => {
@@ -39,7 +36,6 @@ export function SettlementPicker({ value, onChange }: Props) {
   }
 
   const results = searchSettlements(query);
-  const exact = query.trim() && findSettlement(query);
 
   return (
     <View style={{ gap: 6 }}>
@@ -57,17 +53,15 @@ export function SettlementPicker({ value, onChange }: Props) {
           {results.map((s) => (
             <Pressable key={s.name} onPress={() => onChange(s.name)} style={styles.row}>
               <Text style={styles.rowName}>{s.name}</Text>
-              <Text style={styles.rowPrice}>{priceLabel(s.price)}</Text>
+              <Text style={styles.rowPrice}>{formatPrice(s.price)}</Text>
             </Pressable>
           ))}
         </View>
       )}
-      {query.trim().length > 1 && !exact && (
-        <Pressable onPress={() => onChange(query.trim())} style={styles.other}>
-          <Text style={styles.otherText}>
-            Нет в списке — указать «{query.trim()}», стоимость уточнит менеджер
-          </Text>
-        </Pressable>
+      {query.trim().length > 1 && results.length === 0 && (
+        <Text style={styles.otherText}>
+          Не нашли населённый пункт? Позвоните нам — подскажем, сможем ли доставить.
+        </Text>
       )}
     </View>
   );
@@ -96,8 +90,7 @@ const styles = StyleSheet.create({
   },
   rowName: { fontFamily: fonts.body, fontSize: 15, color: colors.text, flex: 1 },
   rowPrice: { fontFamily: fonts.medium, fontSize: 14, color: colors.primary },
-  other: { paddingVertical: 6 },
-  otherText: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, textDecorationLine: 'underline' },
+  otherText: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.muted },
   selected: {
     flexDirection: 'row',
     alignItems: 'center',

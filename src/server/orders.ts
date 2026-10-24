@@ -19,8 +19,7 @@ export type ValidOrder = Omit<OrderRequest, 'items'> & {
   id: string;
   lines: { product: Product; quantity: number }[];
   subtotal: number;
-  // null — стоимость доставки уточнит менеджер.
-  delivery: number | null;
+  delivery: number;
   total: number;
 };
 
@@ -64,9 +63,7 @@ export function validateOrder(
     deliveryMethod !== 'pickup'
       ? {
           settlement:
-            deliveryMethod === 'outside'
-              ? (findSettlement(str(input.address?.settlement, 100))?.name ?? str(input.address?.settlement, 100))
-              : undefined,
+            deliveryMethod === 'outside' ? findSettlement(str(input.address?.settlement, 100))?.name : undefined,
           street: str(input.address?.street, 150),
           house: str(input.address?.house, 20),
           entrance: str(input.address?.entrance, 10),
@@ -77,13 +74,14 @@ export function validateOrder(
 
   if (!customer.name) return { error: 'Укажите имя' };
   if (customer.phone.replace(/\D/g, '').length < 10) return { error: 'Укажите телефон' };
-  if (deliveryMethod === 'outside' && !address?.settlement) return { error: 'Укажите населённый пункт' };
+  if (deliveryMethod === 'outside' && !address?.settlement) return { error: 'Выберите населённый пункт из списка' };
   if (address && (!address.street || !address.house)) return { error: 'Укажите улицу и дом' };
   if (recipient && !recipient.name) return { error: 'Укажите имя получателя' };
   if (!oneOf(PAYMENT_LABELS, input.payment)) return { error: 'Выберите способ оплаты' };
 
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
   const delivery = deliveryCost(deliveryMethod, subtotal, address?.settlement);
+  if (delivery === null) return { error: 'Выберите населённый пункт из списка' };
 
   return {
     order: {
@@ -91,7 +89,7 @@ export function validateOrder(
       lines,
       subtotal,
       delivery,
-      total: subtotal + (delivery ?? 0),
+      total: subtotal + delivery,
       customer,
       recipient,
       deliveryMethod,
@@ -138,8 +136,7 @@ export function orderMessage(order: ValidOrder): string {
         `• ${l.product.url ? `<a href="${e(l.product.url)}">${e(l.product.name)}</a>` : e(l.product.name)} × ${l.quantity} — ${formatPrice(l.product.price * l.quantity)}`,
     ),
     `🚚 ${DELIVERY_LABELS[order.deliveryMethod]}: ${formatDeliveryCost(order.delivery, formatPrice)}`,
-    `<b>Итого: ${formatPrice(order.total)}</b>${order.delivery === null ? ' + доставка' : ''}`,
-    ...(order.delivery === null ? ['⚠️ Согласуйте с покупателем стоимость доставки за город'] : []),
+    `<b>Итого: ${formatPrice(order.total)}</b>`,
     '',
     `👤 Заказчик: ${e(order.customer.name)}, ${e(order.customer.phone)}`,
   ];

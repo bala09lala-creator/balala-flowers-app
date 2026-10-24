@@ -138,7 +138,7 @@ export default function CheckoutScreen() {
     const missing = [
       !name.trim() && 'ваше имя',
       phone.replace(/\D/g, '').length < 10 && 'телефон',
-      isOutside && !settlement.trim() && 'населённый пункт',
+      isOutside && !settlement && 'населённый пункт из списка',
       isDelivery && !street.trim() && 'улицу',
       isDelivery && !house.trim() && 'дом',
       otherRecipient && !recipientName.trim() && 'имя получателя',

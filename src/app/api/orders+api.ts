@@ -41,7 +41,7 @@ export async function POST(request: Request) {
             price: l.product.price,
             subject: 'commodity' as const,
           })),
-          ...(order.delivery && order.delivery > 0
+          ...(order.delivery > 0
             ? [{ description: 'Доставка', quantity: 1, price: order.delivery, subject: 'service' as const }]
             : []),
         ],
