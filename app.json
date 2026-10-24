@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FCE7EF",
+        "backgroundColor": "#F5EDE0",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -27,8 +27,10 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      "expo-image"
     ],
-    "scheme": "balalaflowers"
+    "scheme": "balalaflowers",
+    "backgroundColor": "#FDF8F0"
   }
 }

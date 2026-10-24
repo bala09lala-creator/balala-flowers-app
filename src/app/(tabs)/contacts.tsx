@@ -1,16 +1,26 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
+import { ComponentProps } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Body, Heading, Ornament, Overline } from '../../components/Typography';
 import { SHOP } from '../../config/shop';
-import { colors, radius } from '../../theme';
+import { colors, fonts } from '../../theme';
 import { formatPrice } from '../../utils/format';
 
-function Row({ icon, title, value, onPress }: { icon: string; title: string; value: string; onPress?: () => void }) {
+const logo = require('../../../assets/images/logo.png');
+
+type IconName = ComponentProps<typeof Ionicons>['name'];
+
+function Row({ icon, title, value, url }: { icon: IconName; title: string; value: string; url?: string }) {
   return (
-    <Pressable onPress={onPress} disabled={!onPress} style={styles.row}>
-      <Text style={styles.icon}>{icon}</Text>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={[styles.value, onPress && { color: colors.primary }]}>{value}</Text>
+    <Pressable onPress={url ? () => Linking.openURL(url) : undefined} disabled={!url} style={styles.row}>
+      <View style={styles.icon}>
+        <Ionicons name={icon} size={18} color={colors.primary} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Overline>{title}</Overline>
+        <Text style={[styles.value, !!url && { color: colors.primary }]}>{value}</Text>
       </View>
     </Pressable>
   );
@@ -19,45 +29,63 @@ function Row({ icon, title, value, onPress }: { icon: string; title: string; val
 export default function ContactsScreen() {
   const phoneDigits = SHOP.phone.replace(/[^\d+]/g, '');
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+    <ScrollView contentContainerStyle={{ padding: 20, gap: 20, alignItems: 'center' }}>
+      <Image source={logo} style={{ width: 88, height: 88 }} contentFit="contain" />
+      <Heading>Balala Flowers</Heading>
+      <Body style={{ color: colors.muted, textAlign: 'center' }}>
+        Мы всегда готовы помочь с подбором и подскажем лучший вариант
+      </Body>
+      <Ornament />
+
       <View style={styles.card}>
-        <Text style={styles.shop}>{SHOP.name}</Text>
-        <Text style={styles.value}>{SHOP.slogan}</Text>
-      </View>
-      <View style={styles.card}>
-        <Row icon="📞" title="Телефон" value={SHOP.phone} onPress={() => Linking.openURL(`tel:${phoneDigits}`)} />
+        <Row icon="call-outline" title="Телефон" value={SHOP.phone} url={`tel:${phoneDigits}`} />
+        <Row icon="logo-whatsapp" title="WhatsApp" value="Написать нам" url={`https://wa.me/${SHOP.whatsapp}`} />
+        <Row icon="paper-plane-outline" title="Telegram" value={`@${SHOP.telegram}`} url={`https://t.me/${SHOP.telegram}`} />
         <Row
-          icon="💬"
-          title="WhatsApp"
-          value="Написать нам"
-          onPress={() => Linking.openURL(`https://wa.me/${SHOP.whatsapp}`)}
+          icon="logo-instagram"
+          title="Instagram"
+          value={`@${SHOP.instagram}`}
+          url={`https://instagram.com/${SHOP.instagram}`}
         />
-        <Row icon="📍" title="Адрес" value={SHOP.address} />
-        <Row icon="🕘" title="Часы работы" value={SHOP.hours} />
+        <Row icon="logo-vk" title="ВКонтакте" value={SHOP.vk} url={`https://vk.com/${SHOP.vk}`} />
       </View>
+
       <View style={styles.card}>
-        <Text style={styles.title}>Доставка</Text>
-        <Text style={styles.value}>
-          {formatPrice(SHOP.deliveryPrice)} по городу, бесплатно при заказе от {formatPrice(SHOP.freeDeliveryFrom)}.
-          Доставим в удобный интервал, к букету бесплатно приложим открытку.
-        </Text>
+        <Row icon="location-outline" title="Адрес" value={SHOP.address} />
+        <Row icon="time-outline" title="Время работы" value={`${SHOP.hours}\n${SHOP.holidayHours}`} />
       </View>
+
+      <View style={styles.card}>
+        <Overline>Доставка и оплата</Overline>
+        <Body>
+          Доставка по городу — {formatPrice(SHOP.deliveryPrice)}. Самовывоз из магазина — бесплатно. После оформления
+          заказа с вами свяжется менеджер для подтверждения. Оплата картой онлайн или при получении.
+        </Body>
+      </View>
+
+      <Text style={styles.legal}>{SHOP.legal}</Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    alignSelf: 'stretch',
     backgroundColor: colors.card,
-    borderRadius: radius,
     padding: 16,
-    gap: 14,
+    gap: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  shop: { fontSize: 22, fontWeight: '700', color: colors.primaryDark },
-  row: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  icon: { fontSize: 22 },
-  title: { fontSize: 13, color: colors.muted },
-  value: { fontSize: 15, color: colors.text, lineHeight: 21 },
+  row: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  icon: {
+    width: 36,
+    height: 36,
+    borderWidth: 1,
+    borderColor: colors.peach,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  value: { fontFamily: fonts.body, fontSize: 15, color: colors.text, lineHeight: 21 },
+  legal: { fontFamily: fonts.body, fontSize: 11, color: colors.muted, textAlign: 'center' },
 });

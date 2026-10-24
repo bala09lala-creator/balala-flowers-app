@@ -1,20 +1,32 @@
-import { Image, ImageStyle, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 
-import { Product } from '../data/products';
+import { thumbnail } from '../data/catalog';
+import { colors } from '../theme';
 
-type Props = { product: Product; size: number; style?: ViewStyle };
+const logo = require('../../assets/images/logo.png');
 
-export function ProductImage({ product, size, style }: Props) {
-  if (product.image) {
-    return <Image source={{ uri: product.image }} style={[{ height: size }, styles.box as ImageStyle, style as ImageStyle]} />;
-  }
+type Props = { uri?: string; width?: number; style?: ViewStyle };
+
+export function ProductImage({ uri, width = 400, style }: Props) {
   return (
-    <View style={[{ height: size, backgroundColor: product.tint }, styles.box, style]}>
-      <Text style={{ fontSize: size * 0.45 }}>{product.emoji}</Text>
+    <View style={[styles.box, style]}>
+      {uri ? (
+        <Image
+          source={{ uri: thumbnail(uri, width) }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          transition={200}
+          recyclingKey={uri}
+        />
+      ) : (
+        <Image source={logo} style={styles.logo} contentFit="contain" />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  box: { width: '100%', alignItems: 'center', justifyContent: 'center' },
+  box: { backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  logo: { width: '40%', height: '40%', opacity: 0.4 },
 });

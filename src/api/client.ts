@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+import type { CatalogResponse } from '../data/catalog';
 import type { OrderRequest, OrderResponse, PaymentStatus } from '../data/orders';
 
 // Адрес сервера с API-маршрутами (src/app/api). В продакшене задайте EXPO_PUBLIC_API_URL,
@@ -28,4 +29,8 @@ export function createOrder(order: OrderRequest): Promise<OrderResponse> {
 
 export function getPaymentStatus(paymentId: string): Promise<PaymentStatus> {
   return call(`/api/payments/${encodeURIComponent(paymentId)}`);
+}
+
+export function fetchCatalog(): Promise<CatalogResponse> {
+  return call('/api/catalog');
 }

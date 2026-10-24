@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
-import { getProduct, Product } from '../data/products';
+import type { Product } from '../data/catalog';
+import { useCatalog } from './CatalogContext';
 
-const STORAGE_KEY = 'cart:v1';
+const STORAGE_KEY = 'cart:v2';
 
 export type CartLine = { product: Product; quantity: number };
 
@@ -11,7 +12,8 @@ type CartContextValue = {
   lines: CartLine[];
   count: number;
   total: number;
-  add: (productId: string) => void;
+  quantityOf: (productId: string) => number;
+  add: (product: Product) => void;
   decrement: (productId: string) => void;
   remove: (productId: string) => void;
   clear: () => void;
@@ -20,9 +22,10 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  // productId -> quantity
-  const [items, setItems] = useState<Record<string, number>>({});
+  // Храним копию товара, чтобы корзина показывалась до загрузки каталога.
+  const [items, setItems] = useState<Record<string, CartLine>>({});
   const [loaded, setLoaded] = useState(false);
+  const { byId } = useCatalog();
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -38,20 +41,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, loaded]);
 
   const value = useMemo<CartContextValue>(() => {
-    const lines = Object.entries(items).flatMap(([id, quantity]) => {
-      const product = getProduct(id);
-      return product && quantity > 0 ? [{ product, quantity }] : [];
-    });
+    // Актуальные цена и фото — из свежего каталога, если товар в нём есть.
+    const lines = Object.values(items).map((l) => ({ ...l, product: byId.get(l.product.id) ?? l.product }));
     return {
       lines,
       count: lines.reduce((sum, l) => sum + l.quantity, 0),
       total: lines.reduce((sum, l) => sum + l.quantity * l.product.price, 0),
-      add: (id) => setItems((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 })),
+      quantityOf: (id) => items[id]?.quantity ?? 0,
+      add: (product) =>
+        setItems((prev) => ({ ...prev, [product.id]: { product, quantity: (prev[product.id]?.quantity ?? 0) + 1 } })),
       decrement: (id) =>
         setItems((prev) => {
+          const line = prev[id];
+          if (!line) return prev;
           const next = { ...prev };
-          if ((next[id] ?? 0) <= 1) delete next[id];
-          else next[id] -= 1;
+          if (line.quantity <= 1) delete next[id];
+          else next[id] = { ...line, quantity: line.quantity - 1 };
           return next;
         }),
       remove: (id) =>
@@ -62,7 +67,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }),
       clear: () => setItems({}),
     };
-  }, [items]);
+  }, [items, byId]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

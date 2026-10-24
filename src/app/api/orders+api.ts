@@ -1,11 +1,19 @@
 import type { OrderResponse } from '../../data/orders';
 import { orderMessage, validateOrder } from '../../server/orders';
 import { sendTelegram } from '../../server/telegram';
+import { getProductsById } from '../../server/tilda';
 import { createPayment } from '../../server/yookassa';
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const result = validateOrder(body);
+  let catalog;
+  try {
+    catalog = await getProductsById();
+  } catch (error) {
+    console.error('Catalog failed', error);
+    return Response.json({ error: 'Каталог временно недоступен. Попробуйте позже.' }, { status: 502 });
+  }
+  const result = validateOrder(body, catalog);
   if ('error' in result) {
     return Response.json({ error: result.error }, { status: 400 });
   }
