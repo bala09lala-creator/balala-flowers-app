@@ -11,7 +11,8 @@ export const SHOP = {
   vk: 'balala_flowers',
   address: 'г. Черкесск, ул. Горького, 2',
   addressHint: 'Напротив гимназии № 9, не заезжая во двор дома. В навигаторе ищите «Balala».',
-  mapsUrl: `https://yandex.ru/maps/?text=${encodeURIComponent('Balala, Черкесск, улица Горького, 2')}`,
+  // Карточка магазина в Яндекс Картах
+  mapsUrl: 'https://yandex.ru/maps/org/balala/151539260980/',
   hours: 'Ежедневно 9:00 — 21:00',
   holidayHours: 'В праздники до 23:00: 14 февраля, 8 марта, 24 ноября',
   deliveryPrice: 200,

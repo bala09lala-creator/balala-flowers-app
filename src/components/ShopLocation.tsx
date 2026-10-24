@@ -20,7 +20,12 @@ export function ShopLocation() {
         <Body>{SHOP.address}</Body>
         <Body style={styles.hint}>{SHOP.addressHint}</Body>
       </View>
-      <Button title="Открыть в навигаторе" variant="outline" size="small" onPress={() => Linking.openURL(SHOP.mapsUrl)} />
+      <Button
+        title="Balala на Яндекс Картах"
+        variant="outline"
+        size="small"
+        onPress={() => Linking.openURL(SHOP.mapsUrl)}
+      />
     </View>
   );
 }
