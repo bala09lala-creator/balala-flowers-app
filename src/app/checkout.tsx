@@ -1,4 +1,6 @@
+import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { ReactNode, useMemo, useState } from 'react';
 import {
   Alert,
@@ -14,9 +16,10 @@ import {
   View,
 } from 'react-native';
 
+import { createOrder, getPaymentStatus } from '../api/client';
 import { Button } from '../components/Button';
 import { useCart } from '../context/CartContext';
-import { submitOrder } from '../data/orders';
+import { PAYMENT_LABELS, PaymentMethod, PaymentStatus } from '../data/orders';
 import { colors, radius } from '../theme';
 import { deliveryCost } from '../utils/delivery';
 import { formatPrice } from '../utils/format';
@@ -31,6 +34,18 @@ function nextDays(count: number) {
       i === 0 ? 'Сегодня' : i === 1 ? 'Завтра' : d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
     return { value: d.toISOString().slice(0, 10), label };
   });
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// После возврата со страницы оплаты ЮKassa может ещё несколько секунд обрабатывать платёж.
+async function waitForPayment(paymentId: string): Promise<PaymentStatus['status']> {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const { status } = await getPaymentStatus(paymentId);
+    if (status !== 'pending') return status;
+    await sleep(1500);
+  }
+  return 'pending';
 }
 
 function Field(props: TextInputProps & { label: string }) {
@@ -88,7 +103,7 @@ export default function CheckoutScreen() {
   const [date, setDate] = useState(days[0].value);
   const [timeSlot, setTimeSlot] = useState(TIME_SLOTS[1]);
   const [cardText, setCardText] = useState('');
-  const [payment, setPayment] = useState<'cash' | 'card'>('card');
+  const [payment, setPayment] = useState<PaymentMethod>('online');
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -107,33 +122,38 @@ export default function CheckoutScreen() {
     }
 
     setSending(true);
-    const orderId = String(Date.now()).slice(-6);
     try {
-      await submitOrder({
-        id: orderId,
-        createdAt: new Date().toISOString(),
-        items: lines.map((l) => ({
-          productId: l.product.id,
-          name: l.product.name,
-          price: l.product.price,
-          quantity: l.quantity,
-        })),
-        total: total + delivery,
-        delivery,
+      const { orderId, confirmationUrl, paymentId } = await createOrder({
+        items: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
         customer: { name: name.trim(), phone: phone.trim() },
-        recipient: otherRecipient
-          ? { name: recipientName.trim(), phone: recipientPhone.trim(), address: address.trim() }
-          : { name: name.trim(), phone: phone.trim(), address: address.trim() },
+        recipient: otherRecipient ? { name: recipientName.trim(), phone: recipientPhone.trim() } : null,
+        address: address.trim(),
         date,
         timeSlot,
         cardText: cardText.trim(),
-        payment,
         comment: comment.trim(),
+        payment,
+        returnUrl: Linking.createURL('payment-result'),
       });
+
+      if (payment === 'online') {
+        if (!confirmationUrl || !paymentId) throw new Error('Не удалось открыть оплату');
+        await WebBrowser.openAuthSessionAsync(confirmationUrl, Linking.createURL('payment-result'));
+        const status = await waitForPayment(paymentId);
+        if (status === 'canceled') {
+          Alert.alert('Оплата не прошла', 'Попробуйте ещё раз или выберите оплату при получении.');
+          return;
+        }
+        if (status === 'pending') {
+          Alert.alert('Оплата не завершена', 'Если вы оплатили заказ, мы увидим платёж и перезвоним вам.');
+          return;
+        }
+      }
+
       clear();
       router.replace({ pathname: '/success', params: { orderId } });
-    } catch {
-      Alert.alert('Ошибка', 'Не удалось отправить заказ. Попробуйте ещё раз.');
+    } catch (error) {
+      Alert.alert('Ошибка', error instanceof Error ? error.message : 'Не удалось отправить заказ.');
     } finally {
       setSending(false);
     }
@@ -203,10 +223,10 @@ export default function CheckoutScreen() {
 
         <Section title="Оплата">
           <Chips
-            options={[
-              { value: 'card' as const, label: 'Картой курьеру' },
-              { value: 'cash' as const, label: 'Наличными' },
-            ]}
+            options={(Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((value) => ({
+              value,
+              label: PAYMENT_LABELS[value],
+            }))}
             value={payment}
             onChange={setPayment}
           />
@@ -227,7 +247,7 @@ export default function CheckoutScreen() {
           </View>
         </Section>
 
-        <Button title={sending ? 'Отправляем…' : 'Подтвердить заказ'} onPress={onSubmit} disabled={sending} />
+        <Button title={sending ? 'Отправляем…' : payment === 'online' ? 'Перейти к оплате' : 'Подтвердить заказ'} onPress={onSubmit} disabled={sending} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

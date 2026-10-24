@@ -1,27 +1,35 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+export type PaymentMethod = 'online' | 'card' | 'cash';
 
-const STORAGE_KEY = 'orders:v1';
+export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  online: 'Онлайн (ЮKassa)',
+  card: 'Картой курьеру',
+  cash: 'Наличными',
+};
 
-export type Order = {
-  id: string;
-  createdAt: string;
-  items: { productId: string; name: string; price: number; quantity: number }[];
-  total: number;
-  delivery: number;
+// Что приложение отправляет на сервер. Цены сервер берёт из каталога сам.
+export type OrderRequest = {
+  items: { productId: string; quantity: number }[];
   customer: { name: string; phone: string };
-  recipient: { name: string; phone: string; address: string };
+  recipient: { name: string; phone: string } | null;
+  address: string;
   date: string;
   timeSlot: string;
   cardText: string;
-  payment: 'cash' | 'card';
   comment: string;
+  payment: PaymentMethod;
+  // Куда вернуть покупателя после оплаты (диплинк приложения).
+  returnUrl?: string;
 };
 
-// Сейчас заказ сохраняется только на телефоне. Чтобы заказы приходили вам,
-// здесь нужно отправлять их на сервер / в Telegram-бот / CRM.
-export async function submitOrder(order: Order): Promise<void> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  const orders: Order[] = raw ? JSON.parse(raw) : [];
-  orders.unshift(order);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-}
+export type OrderResponse = {
+  orderId: string;
+  total: number;
+  // Для онлайн-оплаты: страница ЮKassa и id платежа для проверки статуса.
+  confirmationUrl?: string;
+  paymentId?: string;
+};
+
+export type PaymentStatus = {
+  status: 'pending' | 'waiting_for_capture' | 'succeeded' | 'canceled';
+  orderId?: string;
+};

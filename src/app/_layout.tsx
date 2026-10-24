@@ -20,6 +20,7 @@ export default function RootLayout() {
         <Stack.Screen name="product/[id]" options={{ title: '' }} />
         <Stack.Screen name="checkout" options={{ title: 'Оформление заказа' }} />
         <Stack.Screen name="success" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="payment-result" options={{ headerShown: false }} />
       </Stack>
     </CartProvider>
   );
