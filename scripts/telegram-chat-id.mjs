@@ -1,7 +1,8 @@
 // Показывает id чатов, куда добавлен бот, — нужен для TELEGRAM_CHAT_ID.
 // Запуск: TELEGRAM_BOT_TOKEN=... node scripts/telegram-chat-id.mjs
 // Перед запуском напишите любое сообщение в группе с ботом.
-const token = process.env.TELEGRAM_BOT_TOKEN;
+const EXPECTED_BOT = 'Balala_app_bot';
+const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
 if (!token) {
   console.error('Задайте TELEGRAM_BOT_TOKEN');
   process.exit(1);
@@ -13,6 +14,9 @@ if (!me.ok) {
   process.exit(1);
 }
 console.log(`Бот: @${me.result.username}`);
+if (me.result.username !== EXPECTED_BOT) {
+  console.warn(`Внимание: это не @${EXPECTED_BOT}. Проверьте, что взят токен нужного бота.`);
+}
 
 const updates = await (await fetch(`https://api.telegram.org/bot${token}/getUpdates`)).json();
 const chats = new Map();
