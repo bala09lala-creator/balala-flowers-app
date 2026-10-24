@@ -32,7 +32,7 @@ import {
   PhotoChannel,
 } from '../data/orders';
 import { colors, fonts } from '../theme';
-import { deliveryCost } from '../utils/delivery';
+import { deliveryCost, formatDeliveryCost } from '../utils/delivery';
 import { formatPrice } from '../utils/format';
 
 const TIME_SLOTS = ['9:00–12:00', '12:00–15:00', '15:00–18:00', '18:00–21:00'];
@@ -115,6 +115,7 @@ export default function CheckoutScreen() {
   const [otherRecipient, setOtherRecipient] = useState(false);
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
+  const [settlement, setSettlement] = useState('');
   const [street, setStreet] = useState('');
   const [house, setHouse] = useState('');
   const [entrance, setEntrance] = useState('');
@@ -128,13 +129,15 @@ export default function CheckoutScreen() {
   const [payment, setPayment] = useState<PaymentMethod>('online');
   const [sending, setSending] = useState(false);
 
-  const isDelivery = deliveryMethod === 'delivery';
-  const delivery = deliveryCost(deliveryMethod);
+  const isDelivery = deliveryMethod !== 'pickup';
+  const isOutside = deliveryMethod === 'outside';
+  const delivery = deliveryCost(deliveryMethod, total);
 
   async function onSubmit() {
     const missing = [
       !name.trim() && 'ваше имя',
       phone.replace(/\D/g, '').length < 10 && 'телефон',
+      isOutside && !settlement.trim() && 'населённый пункт',
       isDelivery && !street.trim() && 'улицу',
       isDelivery && !house.trim() && 'дом',
       otherRecipient && !recipientName.trim() && 'имя получателя',
@@ -152,7 +155,14 @@ export default function CheckoutScreen() {
         recipient: otherRecipient ? { name: recipientName.trim(), phone: recipientPhone.trim() } : null,
         deliveryMethod,
         address: isDelivery
-          ? { street: street.trim(), house: house.trim(), entrance: entrance.trim(), floor: floor.trim(), apartment: apartment.trim() }
+          ? {
+              settlement: isOutside ? settlement.trim() : undefined,
+              street: street.trim(),
+              house: house.trim(),
+              entrance: entrance.trim(),
+              floor: floor.trim(),
+              apartment: apartment.trim(),
+            }
           : null,
         date,
         timeSlot,
@@ -226,7 +236,23 @@ export default function CheckoutScreen() {
                   />
                 </>
               )}
-              <Text style={styles.text}>Город: {SHOP.city}</Text>
+              {isOutside ? (
+                <>
+                  <Text style={styles.note}>
+                    Доставка за пределы Черкесска платная, стоимость уточнит менеджер после оформления заказа.
+                  </Text>
+                  <Field label="Населённый пункт" value={settlement} onChangeText={setSettlement} />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.text}>Город: {SHOP.city}</Text>
+                  <Text style={styles.note}>
+                    {delivery === 0
+                      ? 'Доставка по городу бесплатная 🎉'
+                      : `Доставка ${formatPrice(SHOP.deliveryPrice)}. Бесплатно при заказе от ${formatPrice(SHOP.freeDeliveryFrom)} — добавьте ещё на ${formatPrice(SHOP.freeDeliveryFrom - total)}.`}
+                  </Text>
+                </>
+              )}
               <Field label="Улица" value={street} onChangeText={setStreet} />
               <View style={styles.row}>
                 <Field label="Дом" value={house} onChangeText={setHouse} />
@@ -270,12 +296,15 @@ export default function CheckoutScreen() {
             <Text style={styles.text}>{formatPrice(total)}</Text>
           </View>
           <View style={styles.sumRow}>
-            <Text style={styles.text}>{DELIVERY_LABELS[deliveryMethod]}</Text>
-            <Text style={styles.text}>{delivery === 0 ? 'бесплатно' : formatPrice(delivery)}</Text>
+            <Text style={styles.text}>Доставка</Text>
+            <Text style={styles.text}>{formatDeliveryCost(delivery, formatPrice)}</Text>
           </View>
           <View style={styles.sumRow}>
             <Text style={styles.total}>К оплате</Text>
-            <Text style={styles.total}>{formatPrice(total + delivery)}</Text>
+            <Text style={styles.total}>
+              {formatPrice(total + (delivery ?? 0))}
+              {delivery === null ? ' + доставка' : ''}
+            </Text>
           </View>
         </Section>
 
@@ -309,6 +338,14 @@ const styles = StyleSheet.create({
   text: { fontFamily: fonts.body, fontSize: 15, color: colors.text },
   hint: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, lineHeight: 19, textAlign: 'center' },
   link: { color: colors.primary, textDecorationLine: 'underline' },
+  note: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.primary,
+    backgroundColor: colors.cream,
+    padding: 10,
+  },
   input: {
     borderWidth: 1,
     borderColor: colors.border,

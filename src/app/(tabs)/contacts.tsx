@@ -59,8 +59,9 @@ export default function ContactsScreen() {
       <View style={styles.card}>
         <Overline>Доставка и оплата</Overline>
         <Body>
-          Доставка по городу — {formatPrice(SHOP.deliveryPrice)}. Самовывоз из магазина — бесплатно. После оформления
-          заказа с вами свяжется менеджер для подтверждения. Оплата картой онлайн или при получении.
+          Доставка по Черкесску — {formatPrice(SHOP.deliveryPrice)}, бесплатно при заказе от{' '}
+          {formatPrice(SHOP.freeDeliveryFrom)}. За пределы Черкесска доставка всегда платная — стоимость
+          уточнит менеджер. Самовывоз из магазина — бесплатно. Оплата картой онлайн или при получении.
         </Body>
       </View>
 

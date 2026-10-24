@@ -1,5 +1,5 @@
 export type PaymentMethod = 'online' | 'cash';
-export type DeliveryMethod = 'delivery' | 'pickup';
+export type DeliveryMethod = 'delivery' | 'outside' | 'pickup';
 export type PhotoChannel = 'whatsapp' | 'telegram' | 'none';
 
 export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
@@ -8,7 +8,8 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
 };
 
 export const DELIVERY_LABELS: Record<DeliveryMethod, string> = {
-  delivery: 'Доставка по городу',
+  delivery: 'По Черкесску',
+  outside: 'За пределы Черкесска',
   pickup: 'Самовывоз',
 };
 
@@ -18,7 +19,15 @@ export const PHOTO_LABELS: Record<PhotoChannel, string> = {
   none: 'Не отправлять',
 };
 
-export type Address = { street: string; house: string; entrance: string; floor: string; apartment: string };
+export type Address = {
+  // Населённый пункт — только для доставки за пределы Черкесска.
+  settlement?: string;
+  street: string;
+  house: string;
+  entrance: string;
+  floor: string;
+  apartment: string;
+};
 
 // Что приложение отправляет на сервер. Цены сервер берёт из каталога Tilda сам.
 export type OrderRequest = {

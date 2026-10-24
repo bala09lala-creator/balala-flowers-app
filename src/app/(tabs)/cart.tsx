@@ -9,6 +9,7 @@ import { Body, Heading } from '../../components/Typography';
 import { SHOP } from '../../config/shop';
 import { useCart } from '../../context/CartContext';
 import { colors, fonts } from '../../theme';
+import { deliveryCost, formatDeliveryCost } from '../../utils/delivery';
 import { formatPrice } from '../../utils/format';
 
 const logo = require('../../../assets/images/logo.png');
@@ -64,10 +65,14 @@ export default function CartScreen() {
           <Text style={styles.sumValue}>{formatPrice(total)}</Text>
         </View>
         <View style={styles.sumRow}>
-          <Text style={styles.muted}>Доставка по городу</Text>
-          <Text style={styles.sumValue}>{formatPrice(SHOP.deliveryPrice)}</Text>
+          <Text style={styles.muted}>Доставка по Черкесску</Text>
+          <Text style={styles.sumValue}>{formatDeliveryCost(deliveryCost('delivery', total), formatPrice)}</Text>
         </View>
-        <Text style={styles.hint}>Самовывоз из магазина — бесплатно</Text>
+        <Text style={styles.hint}>
+          {total >= SHOP.freeDeliveryFrom
+            ? 'Самовывоз — бесплатно'
+            : `До бесплатной доставки по городу — ${formatPrice(SHOP.freeDeliveryFrom - total)}. Самовывоз — бесплатно`}
+        </Text>
         <Button title="Оформить заказ" onPress={() => router.push('/checkout')} style={{ marginTop: 6 }} />
       </View>
     </View>
