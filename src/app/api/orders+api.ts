@@ -1,7 +1,7 @@
 import type { OrderResponse } from '../../data/orders';
 import { SHOP } from '../../config/shop';
 import { orderMessage, validateOrder } from '../../server/orders';
-import { sendTelegram } from '../../server/telegram';
+import { contactButtons, sendTelegram } from '../../server/telegram';
 import { getProductsById } from '../../server/tilda';
 import { createPayment } from '../../server/yookassa';
 import { unitDiscount } from '../../utils/discount';
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await sendTelegram(orderMessage(order) + note);
+    await sendTelegram(orderMessage(order) + note, contactButtons(order.customer.phone));
   } catch (error) {
     console.error('Telegram failed', error);
     return Response.json(

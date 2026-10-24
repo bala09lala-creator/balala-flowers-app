@@ -35,7 +35,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "telegram:chat-id": "node scripts/telegram-chat-id.mjs"
   },
   "private": true
 }

@@ -61,8 +61,10 @@ Tilda (каталог) ──► сервер (src/app/api, EAS Hosting) ──�
 
 1. Напишите [@BotFather](https://t.me/BotFather) команду `/newbot` и сохраните токен.
 2. Создайте группу для заказов (например, «Заказы Balala»), добавьте в неё бота и напишите любое сообщение.
-3. Откройте `https://api.telegram.org/bot<ТОКЕН>/getUpdates`, найдите `"chat":{"id":-100…}` —
-   это `TELEGRAM_CHAT_ID`.
+3. Узнайте id группы: `TELEGRAM_BOT_TOKEN=<токен> npm run telegram:chat-id` — скрипт напечатает
+   `TELEGRAM_CHAT_ID=-100…`. Или откройте `https://api.telegram.org/bot<ТОКЕН>/getUpdates` и найдите `"chat":{"id":…}`.
+
+Под каждым заказом бот показывает кнопки «WhatsApp» и «Telegram», чтобы написать заказчику в одно касание.
 
 ### 2. ЮKassa
 
