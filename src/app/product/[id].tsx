@@ -9,6 +9,7 @@ import { Body, Heading, Ornament, Overline } from '../../components/Typography';
 import { useCart } from '../../context/CartContext';
 import { useCatalog } from '../../context/CatalogContext';
 import { colors, fonts } from '../../theme';
+import { unitDiscount } from '../../utils/discount';
 import { formatPrice } from '../../utils/format';
 
 export default function ProductScreen() {
@@ -59,6 +60,11 @@ export default function ProductScreen() {
             <Text style={styles.price}>{formatPrice(product.price)}</Text>
             {product.oldPrice && <Text style={styles.oldPrice}>{formatPrice(product.oldPrice)}</Text>}
           </View>
+          {unitDiscount(product) > 0 && (
+            <Text style={styles.online}>
+              {formatPrice(product.price - unitDiscount(product))} при оплате онлайн в приложении
+            </Text>
+          )}
           <Ornament />
           {!!product.summary && <Body style={styles.summary}>{product.summary}</Body>}
           {!!product.description && (
@@ -98,6 +104,7 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
   price: { fontFamily: fonts.headingBold, fontSize: 24, color: colors.primary },
   oldPrice: { fontFamily: fonts.body, fontSize: 16, color: colors.muted, textDecorationLine: 'line-through' },
+  online: { fontFamily: fonts.semibold, fontSize: 14, color: colors.accent, marginTop: -6 },
   block: { gap: 6, alignSelf: 'stretch' },
   summary: { color: colors.muted, textAlign: 'center' },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background },

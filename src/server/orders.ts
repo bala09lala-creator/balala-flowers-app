@@ -12,6 +12,7 @@ import {
 import { SHOP } from '../config/shop';
 import { findSettlement } from '../data/settlements';
 import { deliveryCost, formatDeliveryCost } from '../utils/delivery';
+import { onlineDiscount } from '../utils/discount';
 import { formatPrice } from '../utils/format';
 import { escapeHtml } from './telegram';
 
@@ -21,6 +22,8 @@ export type ValidOrder = Omit<OrderRequest, 'items'> & {
   // Товары, которых уже нет в каталоге Tilda: цену уточнит менеджер.
   missing: { name: string; quantity: number }[];
   subtotal: number;
+  // Скидка за онлайн-оплату (только букеты).
+  discount: number;
   // null — стоимость доставки неизвестна: менеджер уточнит и пришлёт реквизиты для доплаты.
   delivery: number | null;
   total: number;
@@ -83,7 +86,10 @@ export function validateOrder(
   if (!customer.name) return { error: 'Укажите имя' };
   if (customer.phone.replace(/\D/g, '').length < 10) return { error: 'Укажите телефон' };
 
+  const payment: PaymentMethod = oneOf(PAYMENT_LABELS, input.payment) ? (input.payment as PaymentMethod) : 'cash';
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+  const discount = payment === 'online' ? onlineDiscount(lines) : 0;
+  // Бесплатная доставка считается от суммы без скидки.
   const delivery = deliveryCost(deliveryMethod, subtotal, address?.settlement);
 
   return {
@@ -92,8 +98,9 @@ export function validateOrder(
       lines,
       missing,
       subtotal,
+      discount,
       delivery,
-      total: subtotal + (delivery ?? 0),
+      total: subtotal - discount + (delivery ?? 0),
       customer,
       recipient,
       deliveryMethod,
@@ -103,7 +110,7 @@ export function validateOrder(
       cardText: str(input.cardText),
       photo: oneOf(PHOTO_LABELS, input.photo) ? (input.photo as PhotoChannel) : 'none',
       comment: str(input.comment),
-      payment: oneOf(PAYMENT_LABELS, input.payment) ? (input.payment as PaymentMethod) : 'cash',
+      payment,
       returnUrl: str(input.returnUrl, 300) || undefined,
     },
   };
@@ -143,6 +150,7 @@ export function orderMessage(order: ValidOrder): string {
     ),
     ...order.missing.map((m) => `• ${e(m.name)} × ${m.quantity} — ⚠️ нет в каталоге, цену уточнить`),
     ...giftsFor(order.lines.map((l) => l.product)).map((g) => `🎁 ${e(g.name)} — в подарок`),
+    ...(order.discount > 0 ? [`💳 Скидка за онлайн-оплату: −${formatPrice(order.discount)}`] : []),
     `🚚 ${DELIVERY_LABELS[order.deliveryMethod]}: ${formatDeliveryCost(order.delivery, formatPrice)}`,
     `<b>Итого: ${formatPrice(order.total)}</b>${order.delivery === null ? ' + доставка' : ''}`,
     '',

@@ -11,6 +11,7 @@ import { SHOP } from '../../config/shop';
 import { useCart } from '../../context/CartContext';
 import { colors, fonts } from '../../theme';
 import { deliveryCost, formatDeliveryCost } from '../../utils/delivery';
+import { onlineDiscount } from '../../utils/discount';
 import { formatPrice } from '../../utils/format';
 
 const logo = require('../../../assets/images/logo.png');
@@ -75,6 +76,11 @@ export default function CartScreen() {
             ? 'Самовывоз — бесплатно'
             : `До бесплатной доставки по городу — ${formatPrice(SHOP.freeDeliveryFrom - total)}. Самовывоз — бесплатно`}
         </Text>
+        {onlineDiscount(lines) > 0 && (
+          <Text style={styles.discount}>
+            💳 При оплате онлайн — скидка {formatPrice(onlineDiscount(lines))} на букеты
+          </Text>
+        )}
         <Button title="Оформить заказ" onPress={() => router.push('/checkout')} style={{ marginTop: 6 }} />
       </View>
     </View>
@@ -100,5 +106,6 @@ const styles = StyleSheet.create({
   sumRow: { flexDirection: 'row', justifyContent: 'space-between' },
   muted: { fontFamily: fonts.body, color: colors.muted, fontSize: 14 },
   sumValue: { fontFamily: fonts.medium, color: colors.text, fontSize: 14 },
+  discount: { fontFamily: fonts.semibold, color: colors.accent, fontSize: 13 },
   hint: { fontFamily: fonts.body, color: colors.muted, fontSize: 12 },
 });

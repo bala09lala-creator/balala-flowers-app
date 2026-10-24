@@ -52,7 +52,7 @@ export const PRICE_RANGES = [
 ];
 
 // Цветочные разделы — к ним идут подарки.
-const FLOWER_CATEGORIES = [
+export const FLOWER_CATEGORIES = [
   'avtorskie', 'rozy', 'tyulpany', 'piony', 'sbornye', 'gortenzii', 'hrizantemy', 'alstromerii',
   'gipsofila', 'diantus', 'eustoma', 'ekzotika', 'korziny', 'svadebnye',
 ];

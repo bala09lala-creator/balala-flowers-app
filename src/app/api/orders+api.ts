@@ -4,6 +4,7 @@ import { orderMessage, validateOrder } from '../../server/orders';
 import { sendTelegram } from '../../server/telegram';
 import { getProductsById } from '../../server/tilda';
 import { createPayment } from '../../server/yookassa';
+import { unitDiscount } from '../../utils/discount';
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
           ...order.lines.map((l) => ({
             description: l.product.name,
             quantity: l.quantity,
-            price: l.product.price,
+            price: l.product.price - unitDiscount(l.product),
             subject: 'commodity' as const,
           })),
           ...(order.delivery && order.delivery > 0

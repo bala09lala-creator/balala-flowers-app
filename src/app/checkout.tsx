@@ -35,6 +35,7 @@ import {
 } from '../data/orders';
 import { colors, fonts } from '../theme';
 import { deliveryCost, formatDeliveryCost } from '../utils/delivery';
+import { onlineDiscount } from '../utils/discount';
 import { formatPrice } from '../utils/format';
 
 const TIME_SLOTS = ['9:00–12:00', '12:00–15:00', '15:00–18:00', '18:00–21:00'];
@@ -169,6 +170,9 @@ export default function CheckoutScreen() {
   const isOutside = deliveryMethod === 'outside';
   const settlementName = settlement || settlementDraft.trim();
   const delivery = deliveryCost(deliveryMethod, total, settlementName);
+  const possibleDiscount = onlineDiscount(lines);
+  const discount = payment === 'online' ? possibleDiscount : 0;
+  const toPay = total - discount + (delivery ?? 0);
 
   async function onSubmit() {
     const missing = [
@@ -333,6 +337,7 @@ export default function CheckoutScreen() {
             title={PAYMENT_LABELS.online}
             badge="Рекомендуем"
             points={[
+              ...(possibleDiscount > 0 ? [`Скидка ${formatPrice(possibleDiscount)} на букеты (3–5%)`] : []),
               'Заказ подтверждается сразу — не нужно ждать звонка',
               'Картой или по СБП, безопасно через ЮKassa',
               'Курьеру не нужно передавать деньги',
@@ -342,7 +347,10 @@ export default function CheckoutScreen() {
             selected={payment === 'cash'}
             onPress={() => setPayment('cash')}
             title={PAYMENT_LABELS.cash}
-            points={['Менеджер позвонит, чтобы подтвердить заказ']}
+            points={[
+              'Менеджер позвонит, чтобы подтвердить заказ',
+              ...(possibleDiscount > 0 ? ['Без скидки за онлайн-оплату'] : []),
+            ]}
           />
         </Section>
 
@@ -353,6 +361,12 @@ export default function CheckoutScreen() {
             <Text style={styles.text}>Товары</Text>
             <Text style={styles.text}>{formatPrice(total)}</Text>
           </View>
+          {discount > 0 && (
+            <View style={styles.sumRow}>
+              <Text style={[styles.text, { color: colors.accent }]}>Скидка за онлайн-оплату</Text>
+              <Text style={[styles.text, { color: colors.accent }]}>−{formatPrice(discount)}</Text>
+            </View>
+          )}
           <View style={styles.sumRow}>
             <Text style={styles.text}>Доставка</Text>
             <Text style={styles.text}>{formatDeliveryCost(delivery, formatPrice)}</Text>
@@ -360,7 +374,7 @@ export default function CheckoutScreen() {
           <View style={styles.sumRow}>
             <Text style={styles.total}>К оплате</Text>
             <Text style={styles.total}>
-              {formatPrice(total + (delivery ?? 0))}
+              {formatPrice(toPay)}
               {delivery === null ? ' + доставка' : ''}
             </Text>
           </View>
@@ -371,7 +385,7 @@ export default function CheckoutScreen() {
             sending
               ? 'Отправляем…'
               : payment === 'online'
-                ? `Оплатить ${formatPrice(total + (delivery ?? 0))}`
+                ? `Оплатить ${formatPrice(toPay)}`
                 : 'Оформить заказ'
           }
           onPress={onSubmit}
