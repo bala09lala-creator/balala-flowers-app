@@ -31,7 +31,7 @@ export default function ContactsScreen() {
   return (
     <ScrollView contentContainerStyle={{ padding: 20, gap: 20, alignItems: 'center' }}>
       <Image source={logo} style={{ width: 88, height: 88 }} contentFit="contain" />
-      <Heading>Balala Flowers</Heading>
+      <Heading>{SHOP.name}</Heading>
       <Body style={{ color: colors.muted, textAlign: 'center' }}>
         Мы всегда готовы помочь с подбором и подскажем лучший вариант
       </Body>

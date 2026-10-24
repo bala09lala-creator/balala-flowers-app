@@ -1,6 +1,6 @@
 // Данные магазина (с сайтов balala-flowers.ru и balala-flowers-revolution.ru).
 export const SHOP = {
-  name: 'Balala Flowers',
+  name: 'Balala',
   slogan: 'Доставка цветов в Черкесске',
   city: 'Черкесск',
   phone: '+7 905 423-32-30',

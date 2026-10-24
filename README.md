@@ -1,4 +1,4 @@
-# Balala Flowers — мобильное приложение цветочного магазина
+# Balala — мобильное приложение цветочного магазина
 
 Приложение для iOS и Android на [Expo](https://expo.dev) (React Native + TypeScript).
 

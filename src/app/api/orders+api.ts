@@ -1,4 +1,5 @@
 import type { OrderResponse } from '../../data/orders';
+import { SHOP } from '../../config/shop';
 import { orderMessage, validateOrder } from '../../server/orders';
 import { sendTelegram } from '../../server/telegram';
 import { getProductsById } from '../../server/tilda';
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
         orderId: order.id,
         amount: order.total,
         returnUrl: returnUrl.toString(),
-        description: `Заказ №${order.id} в Balala Flowers`,
+        description: `Заказ №${order.id} в ${SHOP.name}`,
         customerPhone: order.customer.phone,
         items: [
           ...order.lines.map((l) => ({
