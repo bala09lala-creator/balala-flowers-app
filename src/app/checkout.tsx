@@ -18,6 +18,7 @@ import {
 
 import { createOrder, getPaymentStatus } from '../api/client';
 import { Button } from '../components/Button';
+import { GiftList } from '../components/GiftList';
 import { SettlementPicker } from '../components/SettlementPicker';
 import { ShopLocation } from '../components/ShopLocation';
 import { Overline } from '../components/Typography';
@@ -94,6 +95,39 @@ function Chips<T extends string>({
         );
       })}
     </View>
+  );
+}
+
+function PaymentOption({
+  selected,
+  onPress,
+  title,
+  badge,
+  points,
+}: {
+  selected: boolean;
+  onPress: () => void;
+  title: string;
+  badge?: string;
+  points: string[];
+}) {
+  return (
+    <Pressable onPress={onPress} style={[styles.payOption, selected && styles.payOptionActive]}>
+      <View style={styles.payHeader}>
+        <View style={[styles.radio, selected && styles.radioActive]}>{selected && <View style={styles.radioDot} />}</View>
+        <Text style={styles.payTitle}>{title}</Text>
+        {badge && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge.toUpperCase()}</Text>
+          </View>
+        )}
+      </View>
+      {points.map((p) => (
+        <Text key={p} style={styles.payPoint}>
+          ✓ {p}
+        </Text>
+      ))}
+    </Pressable>
   );
 }
 
@@ -208,6 +242,9 @@ export default function CheckoutScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} keyboardShouldPersistTaps="handled">
+        <Text style={styles.required}>
+          Обязательно только имя и телефон — остальное можно уточнить с менеджером.
+        </Text>
         <Section title="Ваши данные">
           <Field label="ФИО" value={name} onChangeText={setName} placeholder="Иван Петров" />
           <Field label="Телефон" value={phone} onChangeText={setPhone} placeholder="+7" keyboardType="phone-pad" />
@@ -290,8 +327,26 @@ export default function CheckoutScreen() {
         </Section>
 
         <Section title="Оплата">
-          <Chips options={options(PAYMENT_LABELS)} value={payment} onChange={setPayment} />
+          <PaymentOption
+            selected={payment === 'online'}
+            onPress={() => setPayment('online')}
+            title={PAYMENT_LABELS.online}
+            badge="Рекомендуем"
+            points={[
+              'Заказ подтверждается сразу — не нужно ждать звонка',
+              'Картой или по СБП, безопасно через ЮKassa',
+              'Курьеру не нужно передавать деньги',
+            ]}
+          />
+          <PaymentOption
+            selected={payment === 'cash'}
+            onPress={() => setPayment('cash')}
+            title={PAYMENT_LABELS.cash}
+            points={['Менеджер позвонит, чтобы подтвердить заказ']}
+          />
         </Section>
+
+        <GiftList />
 
         <Section title="Итого">
           <View style={styles.sumRow}>
@@ -312,7 +367,13 @@ export default function CheckoutScreen() {
         </Section>
 
         <Button
-          title={sending ? 'Отправляем…' : payment === 'online' ? 'Перейти к оплате' : 'Оформить заказ'}
+          title={
+            sending
+              ? 'Отправляем…'
+              : payment === 'online'
+                ? `Оплатить ${formatPrice(total + (delivery ?? 0))}`
+                : 'Оформить заказ'
+          }
           onPress={onSubmit}
           disabled={sending}
         />
@@ -366,5 +427,24 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontFamily: fonts.body, color: colors.text, fontSize: 14 },
   sumRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  required: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, textAlign: 'center' },
+  payOption: { borderWidth: 1, borderColor: colors.border, padding: 12, gap: 6 },
+  payOptionActive: { borderColor: colors.primary, backgroundColor: colors.background },
+  payHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  payTitle: { flex: 1, fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
+  payPoint: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.muted, marginLeft: 30 },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioActive: { borderColor: colors.primary },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  badge: { backgroundColor: colors.accent, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeText: { fontFamily: fonts.semibold, fontSize: 10, letterSpacing: 1, color: '#fff' },
   total: { fontFamily: fonts.headingBold, fontSize: 19, color: colors.primary },
 });

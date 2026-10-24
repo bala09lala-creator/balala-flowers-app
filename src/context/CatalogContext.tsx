@@ -4,10 +4,12 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import { fetchCatalog } from '../api/client';
 import type { Product } from '../data/catalog';
 
-const STORAGE_KEY = 'catalog:v1';
+const STORAGE_KEY = 'catalog:v2';
 
 type CatalogContextValue = {
   products: Product[];
+  // Бесплатные подарки к букетам (из раздела «Бонусы клиентам»).
+  gifts: Product[];
   byId: Map<string, Product>;
   loading: boolean;
   error: string | null;
@@ -18,6 +20,7 @@ const CatalogContext = createContext<CatalogContextValue | null>(null);
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [gifts, setGifts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,8 +30,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       fetchCatalog()
         .then((data) => {
           setProducts(data.products);
+          setGifts(data.gifts ?? []);
           setError(null);
-          AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data.products)).catch(() => {});
+          AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
         })
         .catch((e) => setError(e instanceof Error ? e.message : 'Не удалось загрузить каталог'))
         .finally(() => setLoading(false)),
@@ -44,15 +48,18 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     // Сначала показываем сохранённый каталог, затем обновляем его с сервера.
     AsyncStorage.getItem(STORAGE_KEY)
       .then((raw) => {
-        if (raw) setProducts((current) => (current.length ? current : JSON.parse(raw)));
+        if (!raw) return;
+        const cached = JSON.parse(raw);
+        setProducts((current) => (current.length ? current : (cached.products ?? [])));
+        setGifts((current) => (current.length ? current : (cached.gifts ?? [])));
       })
       .catch(() => {});
     load();
   }, [load]);
 
   const value = useMemo(
-    () => ({ products, byId: new Map(products.map((p) => [p.id, p])), loading, error, refresh }),
-    [products, loading, error, refresh],
+    () => ({ products, gifts, byId: new Map(products.map((p) => [p.id, p])), loading, error, refresh }),
+    [products, gifts, loading, error, refresh],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

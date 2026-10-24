@@ -51,7 +51,38 @@ export const PRICE_RANGES = [
   { id: '25+', title: 'от 25 000', min: 25000, max: Infinity },
 ];
 
-export type CatalogResponse = { products: Product[]; updatedAt: string };
+// Цветочные разделы — к ним идут подарки.
+const FLOWER_CATEGORIES = [
+  'avtorskie', 'rozy', 'tyulpany', 'piony', 'sbornye', 'gortenzii', 'hrizantemy', 'alstromerii',
+  'gipsofila', 'diantus', 'eustoma', 'ekzotika', 'korziny', 'svadebnye',
+];
+
+// Бесплатные подарки из раздела «Бонусы клиентам» в Tilda (товары с ценой 0).
+// Любой другой товар с ценой 0 — ошибка на сайте, в приложении его нет.
+export const GIFTS: { productId: string; name: string; forCategories: string[] }[] = [
+  {
+    productId: '188375525982',
+    name: 'Инструкция по уходу за цветами Balala',
+    forCategories: [...FLOWER_CATEGORIES, 'rasteniya'],
+  },
+  {
+    productId: '741255691892',
+    name: 'Лекарство для продления жизни цветов',
+    forCategories: FLOWER_CATEGORIES,
+  },
+  { productId: '614564489592', name: 'Сумка-переноска для свадебного букета', forCategories: ['svadebnye'] },
+];
+
+export const GIFT_IDS = new Set(GIFTS.map((g) => g.productId));
+
+// Подарки, положенные к товарам в корзине.
+export function giftsFor(products: Pick<Product, 'categories'>[]): { productId: string; name: string }[] {
+  return GIFTS.filter((g) => products.some((p) => p.categories.some((c) => g.forCategories.includes(c)))).map(
+    ({ productId, name }) => ({ productId, name }),
+  );
+}
+
+export type CatalogResponse = { products: Product[]; gifts: Product[]; updatedAt: string };
 
 // Миниатюра с CDN Tilda — в разы легче оригинала.
 export function thumbnail(url: string, width = 400): string {

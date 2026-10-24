@@ -1,4 +1,4 @@
-import { CATEGORIES, Product } from '../data/catalog';
+import { CATEGORIES, GIFT_IDS, Product } from '../data/catalog';
 
 // Общий раздел «Каталог» на balala-flowers.ru — в нём все товары магазина.
 const CATALOG_PART_UID = '250985871402';
@@ -54,8 +54,8 @@ function toNumber(value: string): number {
 
 export function normalize(p: TildaProduct): Product | null {
   const price = toNumber(p.price);
-  // Товары без цены в Tilda показываются «по запросу» — в приложении их не продаём.
-  if (price <= 0) return null;
+  // Цена 0 — либо подарок (см. GIFTS), либо ошибка на сайте: такие товары не показываем.
+  if (price <= 0 && !GIFT_IDS.has(String(p.uid))) return null;
   const oldPrice = toNumber(p.priceold);
   const images = parseJson<{ img: string }[]>(p.gallery, [])
     .map((g) => g.img)
@@ -94,10 +94,12 @@ async function fetchSlice(slice: number): Promise<TildaResponse> {
   return res.json() as Promise<TildaResponse>;
 }
 
-let cache: { at: number; products: Product[] } | null = null;
+type Catalog = { products: Product[]; gifts: Product[] };
 
-export async function getCatalog(): Promise<Product[]> {
-  if (cache && Date.now() - cache.at < CACHE_MS) return cache.products;
+let cache: { at: number; catalog: Catalog } | null = null;
+
+export async function getCatalog(): Promise<Catalog> {
+  if (cache && Date.now() - cache.at < CACHE_MS) return cache.catalog;
 
   const raw: TildaProduct[] = [];
   let slice: number | undefined = 1;
@@ -108,11 +110,15 @@ export async function getCatalog(): Promise<Product[]> {
     slice = data.nextslice;
   }
 
-  const products = raw.flatMap((p) => normalize(p) ?? []);
-  cache = { at: Date.now(), products };
-  return products;
+  const all = raw.flatMap((p) => normalize(p) ?? []);
+  const catalog = {
+    products: all.filter((p) => !GIFT_IDS.has(p.id)),
+    gifts: all.filter((p) => GIFT_IDS.has(p.id)),
+  };
+  cache = { at: Date.now(), catalog };
+  return catalog;
 }
 
 export async function getProductsById(): Promise<Map<string, Product>> {
-  return new Map((await getCatalog()).map((p) => [p.id, p]));
+  return new Map((await getCatalog()).products.map((p) => [p.id, p]));
 }

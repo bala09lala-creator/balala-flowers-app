@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../../components/Button';
+import { GiftList } from '../../components/GiftList';
 import { ProductImage } from '../../components/ProductImage';
 import { QuantityStepper } from '../../components/QuantityStepper';
 import { Body, Heading } from '../../components/Typography';
@@ -34,6 +35,7 @@ export default function CartScreen() {
         data={lines}
         keyExtractor={(l) => l.product.id}
         contentContainerStyle={{ padding: 16, gap: 12 }}
+        ListFooterComponent={<GiftList />}
         renderItem={({ item: { product, quantity } }) => (
           <View style={styles.line}>
             <Pressable onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}>

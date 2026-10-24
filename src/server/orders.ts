@@ -1,4 +1,4 @@
-import type { Product } from '../data/catalog';
+import { giftsFor, type Product } from '../data/catalog';
 import {
   Address,
   DELIVERY_LABELS,
@@ -142,6 +142,7 @@ export function orderMessage(order: ValidOrder): string {
         `• ${l.product.url ? `<a href="${e(l.product.url)}">${e(l.product.name)}</a>` : e(l.product.name)} × ${l.quantity} — ${formatPrice(l.product.price * l.quantity)}`,
     ),
     ...order.missing.map((m) => `• ${e(m.name)} × ${m.quantity} — ⚠️ нет в каталоге, цену уточнить`),
+    ...giftsFor(order.lines.map((l) => l.product)).map((g) => `🎁 ${e(g.name)} — в подарок`),
     `🚚 ${DELIVERY_LABELS[order.deliveryMethod]}: ${formatDeliveryCost(order.delivery, formatPrice)}`,
     `<b>Итого: ${formatPrice(order.total)}</b>${order.delivery === null ? ' + доставка' : ''}`,
     '',
