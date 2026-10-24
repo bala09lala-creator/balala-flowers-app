@@ -1,6 +1,8 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { SHOP } from '../config/shop';
 import { findSettlement, searchSettlements } from '../data/settlements';
 import { colors, fonts } from '../theme';
 import { formatPrice } from '../utils/format';
@@ -59,10 +61,25 @@ export function SettlementPicker({ value, onChange }: Props) {
         </View>
       )}
       {query.trim().length > 1 && results.length === 0 && (
-        <Text style={styles.otherText}>
-          Не нашли населённый пункт? Позвоните нам — подскажем, сможем ли доставить.
-        </Text>
+        <Text style={styles.otherText}>Ничего не нашлось по запросу «{query.trim()}»</Text>
       )}
+      <View style={styles.managerBox}>
+        <Text style={styles.managerTitle}>Нет вашего населённого пункта в списке?</Text>
+        <Text style={styles.managerText}>Уточните у менеджера, сможем ли доставить и сколько это будет стоить.</Text>
+        <View style={styles.managerButtons}>
+          <Pressable
+            style={styles.managerBtn}
+            onPress={() => Linking.openURL(`tel:${SHOP.phone.replace(/[^\d+]/g, '')}`)}
+          >
+            <Ionicons name="call-outline" size={16} color={colors.primary} />
+            <Text style={styles.managerBtnText}>Позвонить</Text>
+          </Pressable>
+          <Pressable style={styles.managerBtn} onPress={() => Linking.openURL(`https://wa.me/${SHOP.whatsapp}`)}>
+            <Ionicons name="logo-whatsapp" size={16} color={colors.primary} />
+            <Text style={styles.managerBtnText}>WhatsApp</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
@@ -91,6 +108,27 @@ const styles = StyleSheet.create({
   rowName: { fontFamily: fonts.body, fontSize: 15, color: colors.text, flex: 1 },
   rowPrice: { fontFamily: fonts.medium, fontSize: 14, color: colors.primary },
   otherText: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.muted },
+  managerBox: {
+    marginTop: 6,
+    padding: 12,
+    gap: 6,
+    backgroundColor: colors.cream,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  managerTitle: { fontFamily: fonts.semibold, fontSize: 14, color: colors.primary },
+  managerText: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.text },
+  managerButtons: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  managerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  managerBtnText: { fontFamily: fonts.medium, fontSize: 13, color: colors.primary },
   selected: {
     flexDirection: 'row',
     alignItems: 'center',
