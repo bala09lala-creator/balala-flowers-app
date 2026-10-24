@@ -1,7 +1,6 @@
 // Стоимость доставки за пределы Черкесска (от владельца магазина).
 // Доставляем только в населённые пункты из этого списка.
-// TODO: уточнить у магазина: «Кавказский» 550 / «Кавказкий» 600, «Кубан Халк» 800 / «Кубан-халк» 900,
-// «Лен-окт 380».
+// TODO: уточнить у магазина написание «Лен-окт 380».
 export type Settlement = { name: string; price: number; aliases?: string[] };
 
 export const SETTLEMENTS: Settlement[] = [
@@ -48,8 +47,7 @@ export const SETTLEMENTS: Settlement[] = [
   { name: 'Ильичевское', price: 550 },
   { name: 'Инжичишхо', price: 1050 },
   { name: 'Инжич-Чукун', price: 1200 },
-  { name: 'Кавказский', price: 550 },
-  { name: 'Кавказкий', price: 600 },
+  { name: 'Кавказский', price: 550, aliases: ['Кавказкий'] },
   { name: 'Каменномостский', price: 1900 },
   { name: 'Кара Паго', price: 650 },
   { name: 'Карачаевск', price: 1700 },
@@ -64,8 +62,7 @@ export const SETTLEMENTS: Settlement[] = [
   { name: 'Краснодар', price: 9800 },
   { name: 'Красный - Курган', price: 2500 },
   { name: 'Красный восток', price: 1600 },
-  { name: 'Кубан Халк', price: 800 },
-  { name: 'Кубан-халк', price: 900 },
+  { name: 'Кубан-Халк', price: 800, aliases: ['Кубан Халк'] },
   { name: 'Кубина', price: 850 },
   { name: 'Кубрань', price: 1800 },
   { name: 'Кумыш', price: 1400 },
@@ -164,7 +161,7 @@ const normalize = (s: string) => s.toLowerCase().replace(/ё/g, 'е').replace(/[
 
 export function findSettlement(name: string): Settlement | undefined {
   const n = normalize(name);
-  return SETTLEMENTS.find((s) => normalize(s.name) === n);
+  return SETTLEMENTS.find((s) => [s.name, ...(s.aliases ?? [])].some((v) => normalize(v) === n));
 }
 
 export function searchSettlements(query: string, limit = 8): Settlement[] {
