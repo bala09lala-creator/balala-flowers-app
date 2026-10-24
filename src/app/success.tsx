@@ -9,17 +9,30 @@ import { colors } from '../theme';
 
 const logo = require('../../assets/images/logo.png');
 
+type Params = { orderId: string; payment?: 'paid' | 'unpaid' | 'none'; deliveryUnknown?: string };
+
 export default function SuccessScreen() {
-  const { orderId } = useLocalSearchParams<{ orderId: string }>();
+  const { orderId, payment, deliveryUnknown } = useLocalSearchParams<Params>();
+
+  const notes = [
+    payment === 'paid' && 'Оплата прошла успешно.',
+    payment === 'unpaid' && 'Оплата не завершена — ничего страшного: менеджер пришлёт реквизиты для оплаты.',
+    deliveryUnknown && 'Стоимость доставки менеджер уточнит и пришлёт реквизиты для доплаты.',
+    'Менеджер свяжется с вами, чтобы подтвердить детали заказа.',
+  ].filter(Boolean) as string[];
+
   return (
     <View style={styles.box}>
       <Image source={logo} style={{ width: 110, height: 110 }} contentFit="contain" />
       <Heading>Спасибо за заказ!</Heading>
       <Ornament />
       <Body style={styles.text}>Номер заказа: {orderId}</Body>
-      <Body style={styles.text}>
-        Менеджер свяжется с вами, чтобы подтвердить детали. Телефон магазина: {SHOP.phone}
-      </Body>
+      {notes.map((n) => (
+        <Body key={n} style={styles.text}>
+          {n}
+        </Body>
+      ))}
+      <Body style={styles.text}>Телефон магазина: {SHOP.phone}</Body>
       <Button
         title="Вернуться в каталог"
         onPress={() => router.dismissTo('/')}

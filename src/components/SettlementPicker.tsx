@@ -8,20 +8,32 @@ import { colors, fonts } from '../theme';
 import { formatPrice } from '../utils/format';
 import { Overline } from './Typography';
 
-type Props = { value: string; onChange: (name: string) => void };
+type Props = {
+  value: string;
+  onChange: (name: string) => void;
+  // Текст, введённый, но не выбранный из списка, — тоже уходит в заказ.
+  onDraftChange?: (text: string) => void;
+};
 
 // Поиск населённого пункта из списка с ценами доставки.
-export function SettlementPicker({ value, onChange }: Props) {
-  const [query, setQuery] = useState('');
+export function SettlementPicker({ value, onChange, onDraftChange }: Props) {
+  const [query, setQueryState] = useState('');
+  const setQuery = (text: string) => {
+    setQueryState(text);
+    onDraftChange?.(text);
+  };
 
   if (value) {
+    const known = findSettlement(value);
     return (
       <View style={{ gap: 6 }}>
         <Overline>Населённый пункт</Overline>
         <View style={styles.selected}>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{value}</Text>
-            <Text style={styles.price}>Доставка: {formatPrice(findSettlement(value)?.price ?? 0)}</Text>
+            <Text style={styles.price}>
+              Доставка: {known ? formatPrice(known.price) : 'стоимость уточнит менеджер'}
+            </Text>
           </View>
           <Pressable
             onPress={() => {
@@ -60,12 +72,17 @@ export function SettlementPicker({ value, onChange }: Props) {
           ))}
         </View>
       )}
-      {query.trim().length > 1 && results.length === 0 && (
-        <Text style={styles.otherText}>Ничего не нашлось по запросу «{query.trim()}»</Text>
+      {query.trim().length > 1 && !findSettlement(query) && (
+        <Pressable onPress={() => onChange(query.trim())} style={styles.custom}>
+          <Text style={styles.customText}>Указать «{query.trim()}» — стоимость уточнит менеджер</Text>
+        </Pressable>
       )}
       <View style={styles.managerBox}>
         <Text style={styles.managerTitle}>Нет вашего населённого пункта в списке?</Text>
-        <Text style={styles.managerText}>Уточните у менеджера, сможем ли доставить и сколько это будет стоить.</Text>
+        <Text style={styles.managerText}>
+          Впишите его или просто оформите заказ — менеджер свяжется с вами, уточнит стоимость доставки и
+          пришлёт реквизиты для доплаты. Можно и сразу спросить:
+        </Text>
         <View style={styles.managerButtons}>
           <Pressable
             style={styles.managerBtn}
@@ -107,7 +124,8 @@ const styles = StyleSheet.create({
   },
   rowName: { fontFamily: fonts.body, fontSize: 15, color: colors.text, flex: 1 },
   rowPrice: { fontFamily: fonts.medium, fontSize: 14, color: colors.primary },
-  otherText: { fontFamily: fonts.body, fontSize: 13, lineHeight: 19, color: colors.muted },
+  custom: { borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', padding: 12 },
+  customText: { fontFamily: fonts.medium, fontSize: 14, color: colors.primary },
   managerBox: {
     marginTop: 6,
     padding: 12,

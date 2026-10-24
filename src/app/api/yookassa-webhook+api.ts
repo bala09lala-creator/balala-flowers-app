@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     if (payment.status === 'succeeded') {
       await sendTelegram(`✅ <b>Заказ №${orderId} оплачен</b> — ${amount}`);
     } else if (payment.status === 'canceled') {
-      await sendTelegram(`❌ Оплата заказа №${orderId} не прошла (${amount}). Свяжитесь с покупателем.`);
+      await sendTelegram(`❌ Оплата заказа №${orderId} не прошла (${amount}). Свяжитесь с покупателем и отправьте реквизиты.`);
     }
     return Response.json({ ok: true });
   } catch (error) {

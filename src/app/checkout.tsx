@@ -117,6 +117,7 @@ export default function CheckoutScreen() {
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [settlement, setSettlement] = useState('');
+  const [settlementDraft, setSettlementDraft] = useState('');
   const [street, setStreet] = useState('');
   const [house, setHouse] = useState('');
   const [entrance, setEntrance] = useState('');
@@ -132,17 +133,15 @@ export default function CheckoutScreen() {
 
   const isDelivery = deliveryMethod !== 'pickup';
   const isOutside = deliveryMethod === 'outside';
-  const delivery = deliveryCost(deliveryMethod, total, settlement);
+  const settlementName = settlement || settlementDraft.trim();
+  const delivery = deliveryCost(deliveryMethod, total, settlementName);
 
   async function onSubmit() {
     const missing = [
       !name.trim() && 'ваше имя',
       phone.replace(/\D/g, '').length < 10 && 'телефон',
-      isOutside && !settlement && 'населённый пункт из списка',
-      isDelivery && !street.trim() && 'улицу',
-      isDelivery && !house.trim() && 'дом',
-      otherRecipient && !recipientName.trim() && 'имя получателя',
     ].filter(Boolean);
+    // Остальное необязательно: менеджер уточнит при звонке, лишь бы заказ дошёл.
     if (missing.length) {
       Alert.alert('Заполните поля', `Укажите: ${missing.join(', ')}.`);
       return;
@@ -151,13 +150,13 @@ export default function CheckoutScreen() {
     setSending(true);
     try {
       const { orderId, confirmationUrl, paymentId } = await createOrder({
-        items: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
+        items: lines.map((l) => ({ productId: l.product.id, quantity: l.quantity, name: l.product.name })),
         customer: { name: name.trim(), phone: phone.trim() },
         recipient: otherRecipient ? { name: recipientName.trim(), phone: recipientPhone.trim() } : null,
         deliveryMethod,
         address: isDelivery
           ? {
-              settlement: isOutside ? settlement.trim() : undefined,
+              settlement: isOutside ? settlementName : undefined,
               street: street.trim(),
               house: house.trim(),
               entrance: entrance.trim(),
@@ -174,22 +173,23 @@ export default function CheckoutScreen() {
         returnUrl: Linking.createURL('payment-result'),
       });
 
+      // Заказ уже у магазина. Что бы ни случилось с оплатой, показываем «Спасибо» —
+      // если оплата не прошла, менеджер пришлёт реквизиты.
+      let paymentResult: 'paid' | 'unpaid' | 'none' = 'none';
       if (payment === 'online') {
-        if (!confirmationUrl || !paymentId) throw new Error('Не удалось открыть оплату');
-        await WebBrowser.openAuthSessionAsync(confirmationUrl, Linking.createURL('payment-result'));
-        const status = await waitForPayment(paymentId);
-        if (status === 'canceled') {
-          Alert.alert('Оплата не прошла', 'Попробуйте ещё раз или выберите оплату при получении.');
-          return;
-        }
-        if (status === 'pending') {
-          Alert.alert('Оплата не завершена', 'Если вы оплатили заказ, мы увидим платёж и перезвоним вам.');
-          return;
+        paymentResult = 'unpaid';
+        if (confirmationUrl && paymentId) {
+          await WebBrowser.openAuthSessionAsync(confirmationUrl, Linking.createURL('payment-result'));
+          const status = await waitForPayment(paymentId).catch(() => 'pending' as const);
+          if (status === 'succeeded' || status === 'waiting_for_capture') paymentResult = 'paid';
         }
       }
 
       clear();
-      router.replace({ pathname: '/success', params: { orderId } });
+      router.replace({
+        pathname: '/success',
+        params: { orderId, payment: paymentResult, deliveryUnknown: delivery === null ? '1' : '' },
+      });
     } catch (error) {
       Alert.alert('Ошибка', error instanceof Error ? error.message : 'Не удалось отправить заказ.');
     } finally {
@@ -241,9 +241,10 @@ export default function CheckoutScreen() {
                 <>
                   <Text style={styles.note}>
                     Доставка за пределы Черкесска платная, бесплатная доставка от{' '}
-                    {formatPrice(SHOP.freeDeliveryFrom)} на неё не распространяется.
+                    {formatPrice(SHOP.freeDeliveryFrom)} на неё не распространяется. Если вашего населённого пункта
+                    нет в списке — впишите его или просто оформите заказ, менеджер уточнит стоимость.
                   </Text>
-                  <SettlementPicker value={settlement} onChange={setSettlement} />
+                  <SettlementPicker value={settlement} onChange={setSettlement} onDraftChange={setSettlementDraft} />
                 </>
               ) : (
                 <>

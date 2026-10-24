@@ -2,7 +2,8 @@ import { SHOP } from '../config/shop';
 import type { DeliveryMethod } from '../data/orders';
 import { findSettlement } from '../data/settlements';
 
-// Стоимость доставки. null — населённый пункт ещё не выбран или его нет в списке.
+// Стоимость доставки. null — населённого пункта нет в списке (или он не указан):
+// стоимость уточнит менеджер и пришлёт реквизиты для доплаты.
 export function deliveryCost(method: DeliveryMethod, subtotal: number, settlement = ''): number | null {
   if (method === 'pickup') return 0;
   if (method === 'outside') return findSettlement(settlement)?.price ?? null;
@@ -10,6 +11,6 @@ export function deliveryCost(method: DeliveryMethod, subtotal: number, settlemen
 }
 
 export function formatDeliveryCost(cost: number | null, formatPrice: (n: number) => string): string {
-  if (cost === null) return 'выберите населённый пункт';
+  if (cost === null) return 'уточнит менеджер';
   return cost === 0 ? 'бесплатно' : formatPrice(cost);
 }

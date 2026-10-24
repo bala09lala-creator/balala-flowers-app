@@ -31,7 +31,8 @@ export type Address = {
 
 // Что приложение отправляет на сервер. Цены сервер берёт из каталога Tilda сам.
 export type OrderRequest = {
-  items: { productId: string; quantity: number }[];
+  // name — на случай, если товар успели снять с продажи в Tilda.
+  items: { productId: string; quantity: number; name?: string }[];
   customer: { name: string; phone: string };
   recipient: { name: string; phone: string } | null;
   deliveryMethod: DeliveryMethod;

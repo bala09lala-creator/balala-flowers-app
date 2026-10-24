@@ -11,8 +11,9 @@ export async function POST(request: Request) {
   try {
     catalog = await getProductsById();
   } catch (error) {
+    // Tilda недоступна — всё равно принимаем заказ, цены уточнит менеджер.
     console.error('Catalog failed', error);
-    return Response.json({ error: 'Каталог временно недоступен. Попробуйте позже.' }, { status: 502 });
+    catalog = new Map();
   }
   const result = validateOrder(body, catalog);
   if ('error' in result) {
@@ -20,10 +21,11 @@ export async function POST(request: Request) {
   }
   const { order } = result;
 
-  try {
-    const response: OrderResponse = { orderId: order.id, total: order.total };
+  const response: OrderResponse = { orderId: order.id, total: order.total };
+  let note = '';
 
-    if (order.payment === 'online') {
+  if (order.payment === 'online' && order.total > 0) {
+    try {
       const returnUrl = new URL('/api/payment-return', request.url);
       returnUrl.searchParams.set('orderId', order.id);
       if (order.returnUrl) returnUrl.searchParams.set('to', order.returnUrl);
@@ -41,19 +43,30 @@ export async function POST(request: Request) {
             price: l.product.price,
             subject: 'commodity' as const,
           })),
-          ...(order.delivery > 0
+          ...(order.delivery && order.delivery > 0
             ? [{ description: 'Доставка', quantity: 1, price: order.delivery, subject: 'service' as const }]
             : []),
         ],
       });
       response.paymentId = payment.id;
       response.confirmationUrl = payment.confirmation?.confirmation_url;
+    } catch (error) {
+      // Заказ не теряем: менеджер пришлёт реквизиты.
+      console.error('Payment failed', error);
+      note = '\n⚠️ <b>Онлайн-оплата не создалась</b> — отправьте заказчику реквизиты для оплаты.';
     }
-
-    await sendTelegram(orderMessage(order));
-    return Response.json(response);
-  } catch (error) {
-    console.error('Order failed', error);
-    return Response.json({ error: 'Не удалось оформить заказ. Попробуйте ещё раз или позвоните нам.' }, { status: 502 });
+  } else if (order.payment === 'online') {
+    note = '\n⚠️ Сумму к оплате нужно уточнить — отправьте заказчику реквизиты.';
   }
+
+  try {
+    await sendTelegram(orderMessage(order) + note);
+  } catch (error) {
+    console.error('Telegram failed', error);
+    return Response.json(
+      { error: 'Не удалось отправить заказ. Позвоните нам, пожалуйста, — мы всё оформим по телефону.' },
+      { status: 502 },
+    );
+  }
+  return Response.json(response);
 }
