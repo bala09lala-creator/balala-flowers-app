@@ -31,6 +31,12 @@
       "expo-image"
     ],
     "scheme": "balalaflowers",
-    "backgroundColor": "#FDF8F0"
+    "backgroundColor": "#FDF8F0",
+    "owner": "balala-flowers-shop",
+    "extra": {
+      "eas": {
+        "projectId": "2cafc725-6402-4cc9-9186-9861d853a16c"
+      }
+    }
   }
 }
