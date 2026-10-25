@@ -1,4 +1,5 @@
 import { requireEnv } from './env';
+import { phoneDigits } from './telegram';
 
 // Документация API: https://yookassa.ru/developers/api
 export type YooPayment = {
@@ -56,7 +57,7 @@ export function createPayment(params: {
   if (process.env.YOOKASSA_SEND_RECEIPT === 'true') {
     const vatCode = Number(process.env.YOOKASSA_VAT_CODE ?? 1);
     body.receipt = {
-      customer: { phone: params.customerPhone.replace(/\D/g, '') },
+      customer: { phone: phoneDigits(params.customerPhone) },
       items: params.items.map((item) => ({
         description: item.description.slice(0, 128),
         quantity: item.quantity.toFixed(2),
