@@ -2,7 +2,6 @@
 // Запуск: POSIFLORA_URL=https://<магазин>.posiflora.com POSIFLORA_USERNAME=... POSIFLORA_PASSWORD=... \
 //   node scripts/posiflora-report.mjs [ГГГГ-ММ-ДД] [--telegram]
 // Без даты — сегодня по московскому времени. С --telegram отчёт уходит в чаты из TELEGRAM_CHAT_ID.
-const TZ_OFFSET = '+03:00';
 
 const base = process.env.POSIFLORA_URL?.trim().replace(/\/+$/, '').replace(/\/api$/, '');
 const username = process.env.POSIFLORA_USERNAME?.trim();
@@ -43,8 +42,8 @@ const remember = (list) => list?.forEach((r) => included.set(key(r), r));
 const orders = [];
 for (let page = 1; ; page++) {
   const q = new URLSearchParams({
-    'filter[createdAt][from]': `${day}T00:00:00${TZ_OFFSET}`,
-    'filter[createdAt][to]': `${day}T23:59:59${TZ_OFFSET}`,
+    'filter[createdAt][from]': day,
+    'filter[createdAt][to]': day,
     include: 'customer,source,florist',
     'page[number]': String(page),
     'page[size]': '100',
@@ -82,7 +81,8 @@ for (const o of orders) {
   const problems = [];
   if (!customer) problems.push('нет клиента');
   else if (!phone || phone.replace(/\D/g, '').length < 10) problems.push('нет телефона клиента');
-  if (!source) problems.push('нет источника');
+  // В Posiflora есть источник-заглушка «не заполнено» — это тоже пропуск
+  if (!source || /не\s*заполн/i.test(source.attributes?.title ?? '')) problems.push('нет источника');
   rows.push({
     no: o.attributes.docNo ?? o.id,
     sum: o.attributes.totalAmount,
