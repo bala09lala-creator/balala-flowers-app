@@ -36,7 +36,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "telegram:chat-id": "node scripts/telegram-chat-id.mjs"
+    "telegram:chat-id": "node scripts/telegram-chat-id.mjs",
+    "posiflora:report": "node scripts/posiflora-report.mjs"
   },
   "private": true
 }
