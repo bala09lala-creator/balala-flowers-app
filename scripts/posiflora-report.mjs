@@ -72,7 +72,8 @@ async function related(rel, path) {
 
 const rows = [];
 for (const o of orders) {
-  if (o.attributes.status === 'canceled') continue;
+  // Отменённые, возвращённые и сами документы возврата (с минусовой суммой) — не продажи
+  if (['canceled', 'returned'].includes(o.attributes.status) || o.attributes.totalAmount < 0) continue;
   const rel = o.relationships ?? {};
   const customer = await related(rel.customer, '/v1/customers');
   const source = await related(rel.source, '/v1/order-sources');
