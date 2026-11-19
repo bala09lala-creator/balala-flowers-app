@@ -12,7 +12,8 @@ FI=$(( OVW<OVH ? OVW/20 : OVH/20 )); FI=$(( FI<4 ? 4 : FI ))   # растушё�
 MW=$((OVW-2*FI)); MH=$((OVH-2*FI)); FS=$((FI*55/100))
 CART_CROP="${CART_CROP:-iw:ih:0:0}"   # обрезка мультика до вставки, напр. 720:540:0:0 — убрать низ с логотипом/субтитрами
 BGSHIFT="${BGSHIFT:-0}"   # сдвиг фона вниз (px): освобождает верх под врезку, сверху — размытый фон
-TEXTY="${TEXTY:-0.74}"    # вертикальная позиция текста (доля высоты)
+TEXTY="${TEXTY:-0.74}"
+# BGSLOW=1.15 — замедлить фон, если он короче нужной длительности    # вертикальная позиция текста (доля высоты)
 BGH=$(( (1920-BGSHIFT)/2*2 )); BGW=$(( 1080*BGH/1920/2*2 ))
 FONT="${FONT:-}"; [ -z "$FONT" ] && FONT="$(fc-match -f '%{file}' 'DejaVu Sans:light' 2>/dev/null || echo /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf)"   # FONT=путь/к/шрифту.ttf
 FONTSIZE="${FONTSIZE:-50}"
@@ -22,7 +23,7 @@ TXT=$(mktemp); printf "%b" "$TEXT" > "$TXT"
 ffmpeg -y -ss "$START" -t "$DUR" -i "$CART" -stream_loop -1 -i "$BG" \
   -f lavfi -t "$DUR" -i "color=black:s=${OVW}x${OVH},format=gray,drawbox=x=${FI}:y=${FI}:w=${MW}:h=${MH}:color=white:t=fill,gblur=sigma=${FS}" \
   -filter_complex "
-    [1:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,
+    [1:v]setpts=${BGSLOW:-1}*PTS,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,
          eq=saturation=1.08:contrast=1.03,trim=0:${DUR},setpts=PTS-STARTPTS,split[b1][b2];
     [b1]gblur=sigma=40,eq=brightness=-0.06[bblur];
     [b2]scale=${BGW}:${BGH}[bsharp];
