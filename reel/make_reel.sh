@@ -30,7 +30,7 @@ ffmpeg -y -ss "$START" -t "$DUR" -i "$CART" -stream_loop -1 -i "$BG" \
     [2:v]format=gray,fps=30[m];
     [c][m]alphamerge[cm];
     [bg][cm]overlay=x=(W-w)/2:y=${OVY}:shortest=1,
-      drawtext=fontfile='${FONT}':textfile='${TXT}':fontcolor=white:fontsize=50:line_spacing=14:
+      drawtext=fontfile='${FONT}':textfile='${TXT}':text_align=C:fontcolor=white:fontsize=50:line_spacing=14:
         shadowcolor=black@0.55:shadowx=2:shadowy=2:x=(w-text_w)/2:y=h*${TEXTY},format=yuv420p[v]" \
   -map "[v]" -map 0:a? -c:v libx264 -preset medium -crf 18 -profile:v high \
   -c:a aac -b:a 192k -af "afade=t=in:d=0.2,afade=t=out:st=$(echo "$DUR-0.4"|bc):d=0.4" \
