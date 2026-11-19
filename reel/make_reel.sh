@@ -8,7 +8,8 @@ BG="$1"; CART="$2"; START="${3:-0}"; DUR="${4:-6}"
 TEXT="${5:-+1 её незакрытый гештальт\nполучить трендовый букет}"
 OUT="${6:-reel.mp4}"
 OVW="${OVW:-860}"; OVH="${OVH:-484}"; OVY="${OVY:-330}"   # размер и позиция врезки
-MW=$((OVW-80)); MH=$((OVH-80))
+FI=$(( OVW<OVH ? OVW/20 : OVH/20 )); FI=$(( FI<4 ? 4 : FI ))   # растушёвка краёв пропорционально размеру
+MW=$((OVW-2*FI)); MH=$((OVH-2*FI)); FS=$((FI*55/100))
 BGSHIFT="${BGSHIFT:-0}"   # сдвиг фона вниз (px): освобождает верх под врезку, сверху — размытый фон
 TEXTY="${TEXTY:-0.74}"    # вертикальная позиция текста (доля высоты)
 BGH=$(( (1920-BGSHIFT)/2*2 )); BGW=$(( 1080*BGH/1920/2*2 ))
@@ -17,7 +18,7 @@ TXT=$(mktemp); printf "%b" "$TEXT" > "$TXT"
 
 # Врезка OVWxOVH (по умолчанию 16:9; для квадратного мультика OVW=760 OVH=760), маска с мягкими краями (feather)
 ffmpeg -y -ss "$START" -t "$DUR" -i "$CART" -stream_loop -1 -i "$BG" \
-  -f lavfi -t "$DUR" -i "color=black:s=${OVW}x${OVH},format=gray,drawbox=x=40:y=40:w=${MW}:h=${MH}:color=white:t=fill,gblur=sigma=22" \
+  -f lavfi -t "$DUR" -i "color=black:s=${OVW}x${OVH},format=gray,drawbox=x=${FI}:y=${FI}:w=${MW}:h=${MH}:color=white:t=fill,gblur=sigma=${FS}" \
   -filter_complex "
     [1:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,
          eq=saturation=1.08:contrast=1.03,trim=0:${DUR},setpts=PTS-STARTPTS,split[b1][b2];
