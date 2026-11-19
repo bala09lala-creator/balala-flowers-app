@@ -14,7 +14,8 @@ CART_CROP="${CART_CROP:-iw:ih:0:0}"   # обрезка мультика до в�
 BGSHIFT="${BGSHIFT:-0}"   # сдвиг фона вниз (px): освобождает верх под врезку, сверху — размытый фон
 TEXTY="${TEXTY:-0.74}"    # вертикальная позиция текста (доля высоты)
 BGH=$(( (1920-BGSHIFT)/2*2 )); BGW=$(( 1080*BGH/1920/2*2 ))
-FONT="$(fc-match -f '%{file}' 'DejaVu Sans:light' 2>/dev/null || echo /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf)"
+FONT="${FONT:-}"; [ -z "$FONT" ] && FONT="$(fc-match -f '%{file}' 'DejaVu Sans:light' 2>/dev/null || echo /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf)"   # FONT=путь/к/шрифту.ttf
+FONTSIZE="${FONTSIZE:-50}"
 TXT=$(mktemp); printf "%b" "$TEXT" > "$TXT"
 
 # Врезка OVWxOVH (по умолчанию 16:9; для квадратного мультика OVW=760 OVH=760), маска с мягкими краями (feather)
@@ -30,8 +31,8 @@ ffmpeg -y -ss "$START" -t "$DUR" -i "$CART" -stream_loop -1 -i "$BG" \
     [2:v]format=gray,fps=30[m];
     [c][m]alphamerge[cm];
     [bg][cm]overlay=x=(W-w)/2:y=${OVY}:shortest=1,
-      drawtext=fontfile='${FONT}':textfile='${TXT}':text_align=C:fontcolor=white:fontsize=50:line_spacing=14:
-        shadowcolor=black@0.55:shadowx=2:shadowy=2:x=(w-text_w)/2:y=h*${TEXTY},format=yuv420p[v]" \
+      drawtext=fontfile='${FONT}':textfile='${TXT}':text_align=C:fontcolor=white:fontsize=${FONTSIZE}:line_spacing=${LINESP:-14}:
+        shadowcolor=black@0.5:shadowx=2:shadowy=3:borderw=${BORDERW:-0}:bordercolor=black@0.15:x=(w-text_w)/2:y=h*${TEXTY},format=yuv420p[v]" \
   -map "[v]" -map 0:a? -c:v libx264 -preset medium -crf 18 -profile:v high \
   -c:a aac -b:a 192k -af "afade=t=in:d=0.2,afade=t=out:st=$(echo "$DUR-0.4"|bc):d=0.4" \
   -t "$DUR" -movflags +faststart "$OUT"
